@@ -520,7 +520,13 @@ PropertyMap MP4::Tag::setProperties(const PropertyMap &props)
   const PropertyMap origProps = properties();
   for(const auto &[prop, _] : origProps) {
     if(!props.contains(prop) || props[prop].isEmpty()) {
-      d->items.erase(d->factory->nameForPropertyKey(prop));
+      const ByteVector name = d->factory->nameForPropertyKey(prop);
+      d->items.erase(name);
+      // A key read from a native atom (ITUNESADVISORY from rtng) can also have
+      // an old freeform atom, which would come back once the native one is gone.
+      if(!name.isEmpty() && !name.startsWith("----")) {
+        d->items.erase(String("----:com.apple.iTunes:") + prop);
+      }
     }
   }
 
